@@ -1282,8 +1282,435 @@
           nota: unpool(r[50], pool)
         }
       }));
+      applyAuditoria20261112(ALL_RECORDS);
       FILTERED_RECORDS = ALL_RECORDS.slice();
       SELECTED_RECORD = ALL_RECORDS[0];
+    }
+
+    const AUDITORIA_2026_11_12 = {
+"emg-101-penicilina-g-cristalina-infeccao-grave-sem-meningite": [
+"MÉDIO",
+"Doses em UI/kg registradas como dose fixa."
+],
+"emg-102-penicilina-g-cristalina-meningite-endocardite-por-agente-sensive": [
+"MÉDIO",
+"Doses em UI/kg registradas como dose fixa."
+],
+"emg-103-penicilina-g-cristalina-sifilis-congenita": [
+"MÉDIO",
+"Doses em UI/kg registradas como dose fixa."
+],
+"emg-107-propranolol-sintomas-adrenergicos-em-tireotoxicose": [
+"ALTO",
+"2 mg/kg/DOSE 6/6h = 8 mg/kg/dia. Referência: 0,5-2 mg/kg/DIA divididos 6/6-8/8h."
+],
+"emg-108-propranolol-taquiarritmia-supraventricular-manutencao": [
+"CRÍTICO",
+"1-5 mg/kg/DOSE 6/6h. Correto: 1-4 mg/kg/DIA divididos 6/6h."
+],
+"emg-33-cloreto-de-potassio-kcl-reposicao-ev-de-hipocalemia": [
+"ALTO",
+"0,5-1 mEq como dose fixa. Correto: 0,5-1 mEq/kg/dose (máx. 40 mEq), infusão 0,5 mEq/kg/h máx."
+],
+"emg-49-fenitoina-manutencao-apos-carga": [
+"CRÍTICO",
+"5-8 mg/kg/DOSE 8/8h = 15-24 mg/kg/dia (3x). Correto: 5-8 mg/kg/DIA divididos 8/8-12/12h."
+],
+"emg-99-penicilina-g-benzatina-faringoamigdalite-estreptococica": [
+"ALTO",
+"600 UI (correto 600.000 UI se < 27 kg; 1.200.000 UI se >= 27 kg)."
+],
+"mon-10-1-acido-mefenamico-dor-e-inflamacao-6-meses-a-12-anos-vo": [
+"MÉDIO",
+"Teto por tomada 25 mg incompatível com a dose prescrita (provável teto em mg/kg ou por dia gravado como valor absoluto)."
+],
+"mon-101-1-cetoprofeno-dor-e-febre-criancas-1-ano-vo": [
+"MÉDIO",
+"Teto por tomada 2 mg incompatível com a dose prescrita (provável teto em mg/kg ou por dia gravado como valor absoluto)."
+],
+"mon-114-1-clonazepam-epilepsia-pediatrica-lactentes-e-criancas-10-anos-v": [
+"MÉDIO",
+"Teto por tomada 0.2 mg incompatível com a dose prescrita (provável teto em mg/kg ou por dia gravado como valor absoluto)."
+],
+"mon-120-1-cloreto-de-sodio-nacl-ressuscitacao-volemica-no-choque-sf-0-9-": [
+"MÉDIO",
+"10-20 como dose fixa. Correto: 10-20 mL/kg."
+],
+"mon-120-2-cloreto-de-sodio-nacl-hipertensao-intracraniana-hiponatremia-a": [
+"MÉDIO",
+"3-5 como dose fixa. Correto: NaCl 3% 3-5 mL/kg."
+],
+"mon-13-2-acido-valproico-valproato-de-sodio-divalproato-de-sodio-estado-": [
+"ALTO",
+"Carga 20-40 mg/kg registrada com repetição 8/8h. Carga é dose única; manutenção separada."
+],
+"mon-131-1-deferoxamina-mesilato-intoxicacao-aguda-por-ferro-iv": [
+"MÉDIO",
+"Teto por tomada 15 mg incompatível com a dose prescrita (provável teto em mg/kg ou por dia gravado como valor absoluto)."
+],
+"mon-134-2-desmopressina-acetato-ddavp-diabetes-insipidus-central-vo-nasa": [
+"ALTO",
+"0,1-0,8 mg/dose 8/8h via nasal. Nasal: 5-30 mcg/dia; oral: 0,1-0,8 mg/DIA."
+],
+"mon-14-1-adenosina-taquicardia-supraventricular-1-dose-iv-io": [
+"ALTO",
+"Registrada como dose fixa 5-10 'unidade'. PALS: 0,1 mg/kg (máx. 6 mg) em bolus rápido."
+],
+"mon-141-1-diazoxido-hiperinsulinismo-congenito-neonatal-e-infantil-vo": [
+"MÉDIO",
+"Teto por tomada 20 mg incompatível com a dose prescrita (provável teto em mg/kg ou por dia gravado como valor absoluto)."
+],
+"mon-142-1-diclofenaco-potassico-sodico-resinato-dor-e-inflamacao-crianca": [
+"MÉDIO",
+"Teto por tomada 3 mg incompatível com a dose prescrita (provável teto em mg/kg ou por dia gravado como valor absoluto)."
+],
+"mon-144-1-digoxina-dose-de-digitalizacao-rapida-carga-vo": [
+"ALTO",
+"40-50 mcg/kg é dose TOTAL de digitalização (fracionada 1/2, 1/4, 1/4), registrada como dose única 24/24h."
+],
+"mon-145-1-diltiazem-cloridrato-controle-de-taquiarritmia-supraventricula": [
+"ALTO",
+"5-15 mcg/kg/dose IV com apresentação em comprimido. Referência: 0,25 mg/kg IV em 2 min (máx. 20 mg); infusão 0,05-0,15 mg/kg/h."
+],
+"mon-148-1-dipirona-sodica-metamizol-dor-e-febre-via-oral-vo": [
+"MÉDIO",
+"Teto por tomada 100 mg (correto 1 g)."
+],
+"mon-148-2-dipirona-sodica-metamizol-via-intravenosa-intramuscular-na-eme": [
+"MÉDIO",
+"Intervalo 24/24h (correto 6/6h)."
+],
+"mon-155-1-emulsao-lipidica-20-resgate-em-toxicidade-por-anestesico-local": [
+"ALTO",
+"10-12 'unidade' a cada 15 min. Referência (ASRA): bolus 1,5 mL/kg; infusão 0,25 mL/kg/min."
+],
+"mon-156-1-enalapril-maleato-enalaprilato-hipertensao-arterial-insuficien": [
+"MÉDIO",
+"Teto por tomada 0.6 mg incompatível com a dose prescrita (provável teto em mg/kg ou por dia gravado como valor absoluto)."
+],
+"mon-157-1-enoxaparina-sodica-tratamento-de-tromboembolismo-venoso-sc": [
+"CRÍTICO",
+"População >= 2 meses com 1,5 mg/kg/dose (dose de < 2 meses). Referência (CHEST/ACCP): >= 2 meses 1 mg/kg/dose 12/12h; < 2 meses 1,5 mg/kg/dose."
+],
+"mon-157-2-enoxaparina-sodica-profilaxia-de-tev-em-pacientes-de-alto-risc": [
+"ALTO",
+"População >= 2 meses com 0,75 mg/kg/dose (dose de < 2 meses). Referência: >= 2 meses 0,5 mg/kg/dose 12/12h."
+],
+"mon-175-1-ferro-aminoacido-quelato-bisglicinato-ferroso-profilaxia-sbp-l": [
+"ALTO",
+"Doses mg/kg/dia de ferro elementar registradas como dose fixa; prematuros 1.500.000-2.499.000 mg (faixa de peso em g lida como dose)."
+],
+"mon-175-2-ferro-aminoacido-quelato-bisglicinato-ferroso-profilaxia-sbp-p": [
+"ALTO",
+"Doses mg/kg/dia de ferro elementar registradas como dose fixa; prematuros 1.500.000-2.499.000 mg (faixa de peso em g lida como dose)."
+],
+"mon-175-3-ferro-aminoacido-quelato-bisglicinato-ferroso-tratamento-da-an": [
+"ALTO",
+"Doses mg/kg/dia de ferro elementar registradas como dose fixa; prematuros 1.500.000-2.499.000 mg (faixa de peso em g lida como dose)."
+],
+"mon-176-1-ferro-polimaltosado-complexo-de-hidroxido-de-ferro-iii-polimal": [
+"MÉDIO",
+"Doses mg/kg/dia registradas como dose fixa (1 mg; 3-5 mg)."
+],
+"mon-176-2-ferro-polimaltosado-complexo-de-hidroxido-de-ferro-iii-polimal": [
+"MÉDIO",
+"Doses mg/kg/dia registradas como dose fixa (1 mg; 3-5 mg)."
+],
+"mon-177-3-fexofenadina-cloridrato-criancas-12-anos-e-adolescentes-vo": [
+"MÉDIO",
+"120-180 mg/dose 12/12h. Correto: 60 mg 12/12h ou 180 mg 24/24h."
+],
+"mon-178-1-filgrastim-g-csf-neutropenia-febril-pos-quimioterapia-sc-iv": [
+"MÉDIO",
+"Via oral e dose fixa 150-230 mcg. Correto: 5 mcg/kg/dia SC/IV."
+],
+"mon-189-1-foscarnet-sodico-infeccao-retinite-por-cmv-resistente-iv": [
+"ALTO",
+"90-120 mg/kg/dose 8/8h. Indução: 60 mg/kg 8/8h ou 90 mg/kg 12/12h."
+],
+"mon-19-1-alglucosidase-alfa-doenca-de-pompe-iv": [
+"MÉDIO",
+"Teto por tomada 7 mg incompatível com a dose prescrita (provável teto em mg/kg ou por dia gravado como valor absoluto)."
+],
+"mon-191-2-furosemida-tratamento-oral-de-manutencao-vo": [
+"MÉDIO",
+"Teto por tomada 6 mg incompatível com a dose prescrita (provável teto em mg/kg ou por dia gravado como valor absoluto)."
+],
+"mon-197-2-glicose-hipertonica-hipoglicemia-aguda-em-lactentes-e-criancas": [
+"MÉDIO",
+"2-4 como dose fixa. Correto: 2-4 mL/kg de glicose 10% (0,2-0,4 g/kg)."
+],
+"mon-198-1-glucagon-hipoglicemia-grave-sem-acesso-venoso-dm1-sc-im": [
+"MÉDIO",
+"0,5 mg para >= 6 anos/>= 25 kg. Correto: 0,5 mg se < 25 kg; 1 mg se >= 25 kg ou >= 6 anos."
+],
+"mon-199-1-gluconato-de-calcio-10-hipercalemia-grave-com-alteracao-no-ecg": [
+"MÉDIO",
+"Volume fixo. Correto: 0,5-1 mL/kg (hipercalemia) / 1-2 mL/kg (hipocalcemia), máx. 20 mL."
+],
+"mon-199-2-gluconato-de-calcio-10-hipocalcemia-sintomatica-tetania-convul": [
+"MÉDIO",
+"Volume fixo. Correto: 0,5-1 mL/kg (hipercalemia) / 1-2 mL/kg (hipocalcemia), máx. 20 mL."
+],
+"mon-20-1-alopurinol-prevencao-de-hiperuricemia-na-sindrome-de-lise-tumor": [
+"ALTO",
+"300-400 mg/dose 8/8h. Referência: 300-400 mg/m²/DIA (máx. 800 mg/dia) ou 10 mg/kg/dia."
+],
+"mon-201-1-haloperidol-delirium-hiperativo-em-uti-agitacao-grave-iv-im": [
+"MÉDIO",
+"Teto por tomada 0.15 mg incompatível com a dose prescrita (provável teto em mg/kg ou por dia gravado como valor absoluto)."
+],
+"mon-202-1-heparina-nao-fracionada-sodica-tratamento-de-trombose-sistemic": [
+"ALTO",
+"75-100 UI como dose fixa e 5 UI/mL. Correto: bolus 75 UI/kg; 5000 UI/mL."
+],
+"mon-205-2-hidrocortisona-succinato-sodico-acetato-butirato-reposicao-fis": [
+"MÉDIO",
+"8-12 mg/dose 8/8h. Correto: 8-12 mg/m²/DIA divididos."
+],
+"mon-206-1-hidroxicloroquina-sulfato-lupus-eritematoso-sistemico-aij-vo": [
+"MÉDIO",
+"Teto por tomada 5 mg incompatível com a dose prescrita (provável teto em mg/kg ou por dia gravado como valor absoluto)."
+],
+"mon-210-1-hidroxocobalamina-vitamina-b12-intoxicacao-aguda-por-cianeto-i": [
+"ALTO",
+"Concentração 0,001 mg/mL. Cyanokit: 5 g/200 mL (25 mg/mL)."
+],
+"mon-214-1-imiglucerase-doenca-de-gaucher-iv": [
+"MÉDIO",
+"30-60 UI dose fixa. Correto: 30-60 UI/kg a cada 2 semanas."
+],
+"mon-216-1-imipramina-cloridrato-enurese-noturna-criancas-6-anos-vo": [
+"MÉDIO",
+"Teto por tomada 2.5 mg incompatível com a dose prescrita (provável teto em mg/kg ou por dia gravado como valor absoluto)."
+],
+"mon-218-1-imunoglobulina-humana-antirrabica-profilaxia-pos-exposicao-ant": [
+"MÉDIO",
+"20 UI dose fixa. Correto: 20 UI/kg."
+],
+"mon-229-1-insulina-regular-humana-cetoacidose-diabetica-cad-infusao-cont": [
+"ALTO",
+"0,05-0,1 UI como dose fixa 24/24h. Correto: 0,05-0,1 UI/kg/HORA em infusão contínua (ISPAD)."
+],
+"mon-229-2-insulina-regular-humana-hipercalemia-grave-com-alteracao-no-ec": [
+"ALTO",
+"0,1 UI dose fixa. Correto: 0,1 UI/kg com glicose 0,5 g/kg."
+],
+"mon-231-1-isavuconazol-sulfato-aspergilose-invasiva-mucormicose-criancas": [
+"MÉDIO",
+"Teto diário 200 mg incompatível com ataque 8/8h; separar ataque (6 doses) e manutenção 24/24h."
+],
+"mon-24-1-amicacina-sulfato-sepse-infeccao-grave-criancas-1-mes-iv-im": [
+"CRÍTICO",
+"15-20 mg/kg/DOSE 8/8h = 45-60 mg/kg/dia (3x). Referência: 15-22,5 mg/kg/DIA (dose única diária ou 5-7,5 mg/kg/dose 8/8h)."
+],
+"mon-253-2-lidocaina-cloridrato-pcr-fv-tv-sem-pulso-taquiarritmias-ventri": [
+"ALTO",
+"20-50 mcg/kg/dose. PALS: bolus 1 mg/kg; 20-50 mcg/kg/MIN é infusão."
+],
+"mon-26-1-aminofilina-apneia-da-prematuro-iv-vo": [
+"ALTO",
+"Concentração 240 mg/mL (real 24 mg/mL); 5-6 mg/kg é dose de ATAQUE, registrada 8/8h (manutenção 1-2 mg/kg/dose 8/8-12/12h)."
+],
+"mon-26-2-aminofilina-crise-asmatica-grave-em-uti-iv": [
+"ALTO",
+"Concentração 240 mg/mL. Apresentação real: 24 mg/mL (240 mg/10 mL) — erro de 10x no volume."
+],
+"mon-263-1-meloxicam-artrite-idiopatica-juvenil-criancas-2-anos-vo": [
+"MÉDIO",
+"Teto por tomada 0.25 mg incompatível com a dose prescrita (provável teto em mg/kg ou por dia gravado como valor absoluto)."
+],
+"mon-267-1-metformina-cloridrato-diabetes-mellitus-tipo-2-criancas-10-ano": [
+"MÉDIO",
+"1,5-2 mg/dose, máx. 2 mg. Unidade errada: 1,5-2 g/DIA (máx. 2000 mg/dia)."
+],
+"mon-268-1-metilfenidato-cloridrato-tdah-liberacao-imediata-vo": [
+"MÉDIO",
+"Teto por tomada 2 mg incompatível com a dose prescrita (provável teto em mg/kg ou por dia gravado como valor absoluto)."
+],
+"mon-27-2-amiodarona-cloridrato-taquiarritmias-com-pulso-tsv-tv-estavel-i": [
+"ALTO",
+"5-15 mcg/kg/dose. Ataque: 5 mg/kg (máx. 300 mg) em 20-60 min; 5-15 mcg/kg/MIN é a infusão contínua."
+],
+"mon-270-1-metoclopramida-cloridrato-nauseas-e-vomitos-criancas-1-ano-vo-": [
+"MÉDIO",
+"Teto por tomada 0.5 mg incompatível com a dose prescrita (provável teto em mg/kg ou por dia gravado como valor absoluto)."
+],
+"mon-272-2-metronidazol-benzoilmetronidazol-amebiase-intestinal-abscesso-": [
+"MÉDIO",
+"Teto diário 2,25 mg (unidade): correto 2,25 g."
+],
+"mon-274-1-miconazol-nitrato-candidiase-oral-sapinho-lactentes-4-meses-ge": [
+"MÉDIO",
+"Gel oral registrado com via intravenosa."
+],
+"mon-284-1-naproxeno-naproxeno-sodico-artrite-idiopatica-juvenil-criancas": [
+"MÉDIO",
+"Teto por tomada 20 mg incompatível com a dose prescrita (provável teto em mg/kg ou por dia gravado como valor absoluto)."
+],
+"mon-291-1-nistatina-candidiase-oral-sapinho-recem-nascidos-e-lactentes-v": [
+"MÉDIO",
+"100-200 UI / 400-600 UI (correto 100.000-200.000 UI e 400.000-600.000 UI)."
+],
+"mon-291-2-nistatina-criancas-maiores-e-imunodeprimidos-vo": [
+"MÉDIO",
+"100-200 UI / 400-600 UI (correto 100.000-200.000 UI e 400.000-600.000 UI)."
+],
+"mon-295-1-nitroglicerina-edema-pulmonar-cardiogenico-insuficiencia-cardi": [
+"MÉDIO",
+"Teto por tomada 10 mcg incompatível com a dose prescrita (provável teto em mcg/kg ou por dia gravado como valor absoluto)."
+],
+"mon-297-1-noradrenalina-hemitartarato-de-norepinefrina-choque-septico-va": [
+"ALTO",
+"Via oral e 2000 mcg/mL. Correto: IV, 1 mg/mL (diluir); 0,05-2 mcg/kg/min."
+],
+"mon-302-1-omalizumabe-asma-alergica-grave-nao-controlada-criancas-6-anos": [
+"MÉDIO",
+"Intervalo 24/24h. Correto: a cada 2 a 4 semanas conforme IgE e peso."
+],
+"mon-307-1-oxcarbazepina-epilepsia-pediatrica-crises-focais-vo": [
+"MÉDIO",
+"Teto por tomada 60 mg incompatível com a dose prescrita (provável teto em mg/kg ou por dia gravado como valor absoluto)."
+],
+"mon-310-1-palivizumabe-profilaxia-contra-vsr-criterios-do-ministerio-da-": [
+"MÉDIO",
+"Intervalo 24/24h. Correto: 15 mg/kg mensal (até 5 doses na sazonalidade)."
+],
+"mon-312-2-paracetamol-acetaminofeno-via-intravenosa-na-emergencia-pos-op": [
+"MÉDIO",
+"Teto por tomada 30 mg incompatível com a dose prescrita (provável teto em mg/kg ou por dia gravado como valor absoluto)."
+],
+"mon-329-1-posaconazol-profilaxia-tratamento-de-micoses-invasivas-crianca": [
+"MÉDIO",
+"Teto por tomada igual ao teto diário com intervalo 12/12h."
+],
+"mon-331-1-praziquantel-esquistossomose-mansonica-vo": [
+"ALTO",
+"50-60 mg/kg/DOSE 12/12h. Referência MS/OMS: 40-60 mg/kg/DIA em dose única ou dividida."
+],
+"mon-342-1-quetiapina-fumarato-transtorno-bipolar-esquizofrenia-em-adoles": [
+"ALTO",
+"400-800 mg é dose-alvo DIÁRIA, registrada por tomada 12/12h."
+],
+"mon-346-1-retinol-vitamina-a-palmitato-de-retinol-tratamento-do-sarampo-": [
+"ALTO",
+"100 UI / 50 UI (correto 100.000 UI / 50.000 UI conforme idade)."
+],
+"mon-346-2-retinol-vitamina-a-palmitato-de-retinol-programa-nacional-de-s": [
+"ALTO",
+"100 UI / 50 UI (correto 100.000 UI / 50.000 UI conforme idade)."
+],
+"mon-347-1-ribavirina-hepatite-c-cronica-em-criancas-3-anos-vo": [
+"ALTO",
+"1000-1200 mg/dose 12/12h para >= 3 anos (dose diária de adulto). Pediatria: 15 mg/kg/dia divididos 12/12h."
+],
+"mon-35-1-anfotericina-b-desoxicolato-infeccoes-fungicas-invasivas-iv": [
+"CRÍTICO",
+"Intervalo 4/4h e teto 1,5 mg. Correto: 0,5-1 mg/kg/dia em dose única diária (24/24h), máx. 1,5 mg/kg/dia."
+],
+"mon-359-1-sildenafila-citrato-hipertensao-pulmonar-pediatrica-dose-padro": [
+"MÉDIO",
+"Teto por tomada 2 mg incompatível com a dose prescrita (provável teto em mg/kg ou por dia gravado como valor absoluto)."
+],
+"mon-36-2-anfotericina-b-lipossomal-leishmaniose-visceral-protocolo-brasi": [
+"CRÍTICO",
+"20-24 mg/kg é DOSE TOTAL do tratamento, registrada como dose diária. MS/Brasil: 3 mg/kg/dia por 7 dias ou 4 mg/kg/dia por 5 dias."
+],
+"mon-37-1-anidulafungina-candidiase-invasiva-candidemia-iv": [
+"MÉDIO",
+"Teto por tomada (200 mg) maior que o diário (100 mg): ataque 3 mg/kg e manutenção 1,5 mg/kg separados."
+],
+"mon-376-1-sulfadiazina-toxoplasmose-congenita-protocolo-ms-sbp-vo-por-12": [
+"ALTO",
+"5-10 mg/dose. Toxoplasmose congênita: 100 mg/kg/dia divididos 12/12h."
+],
+"mon-378-1-sulfametoxazol-trimetoprima-co-trimoxazol-tratamento-de-pneumo": [
+"ALTO",
+"Doses em mg/kg/dia de trimetoprima registradas como dose fixa (5, 8-10, 15-20 mg/dose)."
+],
+"mon-378-2-sulfametoxazol-trimetoprima-co-trimoxazol-quimioprofilaxia-de-": [
+"ALTO",
+"Doses em mg/kg/dia de trimetoprima registradas como dose fixa (5, 8-10, 15-20 mg/dose)."
+],
+"mon-378-3-sulfametoxazol-trimetoprima-co-trimoxazol-infeccoes-bacteriana": [
+"ALTO",
+"Doses em mg/kg/dia de trimetoprima registradas como dose fixa (5, 8-10, 15-20 mg/dose)."
+],
+"mon-382-2-sulfato-ferroso-tratamento-da-anemia-ferropriva-confirmada-vo": [
+"MÉDIO",
+"3-5 mg/dose 12/12h. Correto: 3-5 mg/kg/DIA de ferro elementar."
+],
+"mon-388-1-terbinafina-cloridrato-tinea-capitis-por-trichophyton-vo": [
+"MÉDIO",
+"62,5 mg é a dose de 10-20 kg, mas o registro exige peso mínimo de 40 kg (> 40 kg: 250 mg/dia)."
+],
+"mon-410-1-vigabatrina-espasmos-infantis-sindrome-de-west-vo": [
+"MÉDIO",
+"Teto por tomada 150 mg incompatível com a dose prescrita (provável teto em mg/kg ou por dia gravado como valor absoluto)."
+],
+"mon-413-1-zonisamida-crises-focais-e-generalizadas-criancas-6-anos-vo": [
+"MÉDIO",
+"Teto por tomada 12 mg incompatível com a dose prescrita (provável teto em mg/kg ou por dia gravado como valor absoluto)."
+],
+"mon-43-1-azitromicina-pneumonia-atipica-infeccoes-respiratorias-vo": [
+"MÉDIO",
+"Teto por tomada 500 mg maior que o diário 250 mg."
+],
+"mon-48-1-benzilpenicilina-benzatina-faringoamigdalite-estreptococica-pro": [
+"ALTO",
+"600 UI / 50 UI (faltam milhares: 600.000 UI; 50.000 UI/kg)."
+],
+"mon-48-2-benzilpenicilina-benzatina-profilaxia-secundaria-da-febre-reuma": [
+"ALTO",
+"600 UI / 50 UI (faltam milhares: 600.000 UI; 50.000 UI/kg)."
+],
+"mon-48-3-benzilpenicilina-benzatina-sifilis-adquirida-precoce-im": [
+"ALTO",
+"600 UI / 50 UI (faltam milhares: 600.000 UI; 50.000 UI/kg)."
+],
+"mon-53-1-beractanto-surfactante-pulmonar-bovino-sdr-neonatal-membrana-hi": [
+"ALTO",
+"100 mg dose fixa. Correto: 100 mg/kg (4 mL/kg) intratraqueal."
+],
+"mon-55-2-bicarbonato-de-sodio-intoxicacao-por-antidepressivos-triciclico": [
+"ALTO",
+"1-2 mEq como dose fixa. Correto: 1-2 mEq/kg."
+],
+"mon-72-1-calcipotriol-psoriase-em-placas-topico": [
+"MÉDIO",
+"50.000 mg/dose (valor sem sentido para pomada tópica)."
+],
+"mon-76-2-captopril-lactentes-e-criancas-vo": [
+"MÉDIO",
+"Teto por tomada 6 mg incompatível com a dose prescrita (provável teto em mg/kg ou por dia gravado como valor absoluto)."
+],
+"mon-77-3-carbamazepina-criancas-12-anos-e-adolescentes-vo": [
+"ALTO",
+"800-1200 mg é dose DIÁRIA, registrada por tomada 12/12h (até 2400 mg/dia)."
+],
+"mon-84-1-cefadroxila-faringite-estreptococica-infeccoes-cutaneas-vo": [
+"ALTO",
+"1000-2000 mg/dose 12/12h. Referência pediátrica: 30 mg/kg/dia 12/12h (máx. 2 g/DIA)."
+],
+"mon-99-3-cetirizina-dicloridrato-criancas-6-anos-e-adolescentes-vo": [
+"MÉDIO",
+"5-10 mg/dose 12/12h (até 20 mg/dia). Correto: 10 mg/dia (5 mg 12/12h ou 10 mg 24/24h)."
+]
+};
+    // Auditoria contínua 12/11/2026: registros 'liberado' com erro de dose, unidade, intervalo,
+    // concentração ou população são rebaixados para 'pendente' (revisão clínica reprovada).
+    function applyAuditoria20261112(records) {
+      let n = 0;
+      records.forEach(rec => {
+        const a = AUDITORIA_2026_11_12[rec.id];
+        if (!a) return;
+        rec.status = 'pendente';
+        rec.revisao.clinica = 'reprovada';
+        rec.revisao.data = '2026-11-12';
+        rec.revisao.nota = '[AUDITORIA 12/11/2026 — ' + a[0] + '] ' + a[1] + (rec.revisao.nota ? ' | Nota anterior: ' + rec.revisao.nota : '');
+        n++;
+      });
+      return n;
     }
 
     // =========================================================================
