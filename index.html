@@ -1283,6 +1283,30 @@
         }
       }));
       applyAuditoria20261112(ALL_RECORDS);
+      // ETAPA C (2026-11-22): fichas com base temporal defeituosa nao
+      // exibem dose. Os numeros ficam retidos aqui para auditoria; nada foi
+      // apagado do arquivo. Reativar so depois da correcao conferida na fonte.
+      const DOSE_RETIDA_20261122 = ["emg-100-penicilina-g-benzatina-sifilis-adquirida-congenita-selecionada","emg-101-penicilina-g-cristalina-infeccao-grave-sem-meningite","emg-102-penicilina-g-cristalina-meningite-endocardite-por-agente-sensive","emg-103-penicilina-g-cristalina-sifilis-congenita","emg-104-penicilina-g-procaina-sifilis-congenita-alternativa-especifica","emg-33-cloreto-de-potassio-kcl-reposicao-ev-de-hipocalemia","mon-108-1-citrato-de-potassio-nefrolitiase-hipocitraturia-atr-tipo-1-vo","mon-119-2-cloreto-de-potassio-kcl-correcao-de-hipocalemia-grave-sintomat","mon-119-3-cloreto-de-potassio-kcl-reposicao-oral-vo","mon-125-1-colestiramina-prurido-na-colestase-hipercolesterolemia-vo","mon-126-1-colistimetato-de-sodio-colistina-infeccoes-sistemicas-graves-i","mon-14-1-adenosina-taquicardia-supraventricular-1-dose-iv-io","mon-158-2-enzimas-pancreaticas-pancreatina-pancrelipase-fibrose-cistica-","mon-175-2-ferro-aminoacido-quelato-bisglicinato-ferroso-profilaxia-sbp-p","mon-178-1-filgrastim-g-csf-neutropenia-febril-pos-quimioterapia-sc-iv","mon-199-1-gluconato-de-calcio-10-hipercalemia-grave-com-alteracao-no-ecg","mon-199-2-gluconato-de-calcio-10-hipocalcemia-sintomatica-tetania-convul","mon-202-1-heparina-nao-fracionada-sodica-tratamento-de-trombose-sistemic","mon-205-1-hidrocortisona-succinato-sodico-acetato-butirato-crise-adrenal","mon-208-1-hidroxido-ferrico-em-sacarose-sacarato-de-hidroxido-ferrico-tr","mon-214-1-imiglucerase-doenca-de-gaucher-iv","mon-218-1-imunoglobulina-humana-antirrabica-profilaxia-pos-exposicao-ant","mon-224-1-insulina-detemir-controle-basal-no-dm1-sc","mon-228-1-insulina-nph-humana-controle-basal-no-dm1-sc","mon-229-1-insulina-regular-humana-cetoacidose-diabetica-cad-infusao-cont","mon-229-2-insulina-regular-humana-hipercalemia-grave-com-alteracao-no-ec","mon-247-1-levodopa-benserazida-carbidopa-distonia-de-segawa-distonia-res","mon-300-2-olanzapina-antiemetico-em-quimioterapia-de-alto-risco-paliativ","mon-303-1-omeprazol-magnesico-sodico-drge-esofagite-erosiva-doenca-pepti","mon-311-1-pantoprazol-sodico-hemorragia-digestiva-alta-grave-iv","mon-325-1-polimixina-b-sulfato-infeccoes-graves-por-bacterias-multirresi","mon-332-2-prednisolona-fosfato-sodico-acetato-sindrome-nefrotica-fase-de","mon-376-1-sulfadiazina-toxoplasmose-congenita-protocolo-ms-sbp-vo-por-12","mon-398-1-tocoferol-acetato-de-racealfatocoferol-vitamina-e-prematuros-e","mon-398-2-tocoferol-acetato-de-racealfatocoferol-vitamina-e-colestase-cr","mon-408-1-vasopressina-choque-septico-vasoplegico-refratario-em-uti-iv-i","mon-408-2-vasopressina-diabetes-insipidus-central-pos-cirurgico-iv-conti","mon-48-3-benzilpenicilina-benzatina-sifilis-adquirida-precoce-im","mon-49-1-benzilpenicilina-potassica-cristalina-sifilis-congenita-neuross","mon-49-2-benzilpenicilina-potassica-cristalina-pneumonia-grave-infeccao-","mon-49-3-benzilpenicilina-potassica-cristalina-meningite-bacteriana-iv","mon-50-1-benzilpenicilina-procaina-benzilpenicilina-potassica-infeccoes-","mon-50-2-benzilpenicilina-procaina-benzilpenicilina-potassica-sifilis-co","mon-55-2-bicarbonato-de-sodio-intoxicacao-por-antidepressivos-triciclico","mon-55-3-bicarbonato-de-sodio-acidose-tubular-renal-vo","mon-69-1-bupivacaina-cloridrato-bloqueio-caudal-peridural-pediatrico-inf","mon-73-1-calcitonina-sintetica-de-salmao-hipercalcemia-grave-sc-im","mon-84-1-cefadroxila-faringite-estreptococica-infeccoes-cutaneas-vo"];
+      (function reterDoseDefeituosa(records) {
+        const alvo = new Set(DOSE_RETIDA_20261122);
+        records.forEach(function (rec) {
+          if (!alvo.has(rec.id)) return;
+          rec.doseRetida = {
+            tipo_dose: rec.posologia.tipo_dose,
+            valor_minimo: rec.posologia.valor_minimo,
+            valor_maximo: rec.posologia.valor_maximo,
+            unidade_dose: rec.posologia.unidade_dose
+          };
+          rec.posologia.valor_minimo = null;
+          rec.posologia.valor_maximo = null;
+          rec.posologia.unidade_dose = "pendente";
+          rec.posologia.tipo_dose = "pendente";
+          rec.revisao.nota = "[DOSE RETIDA 22/11/2026] Base temporal em correcao: o numero "
+            + "publicado nao corresponde a unidade da fonte. Dose oculta ate a correcao conferida. "
+            + (rec.revisao.nota || "");
+        });
+      })(ALL_RECORDS);
+
       FILTERED_RECORDS = ALL_RECORDS.slice();
       SELECTED_RECORD = ALL_RECORDS[0];
     }
@@ -1897,9 +1921,11 @@
           ? ap.concentracao_valor + " " + ap.concentracao_unidade + "/" + ap.base_valor + " " + ap.base_unidade
           : "Concentração pendente";
         const pos = r.posologia;
-        const doseStr = pos.valor_minimo !== null
-          ? (pos.valor_minimo === pos.valor_maximo ? pos.valor_minimo : pos.valor_minimo + "–" + pos.valor_maximo) + " " + pos.unidade_dose
-          : "pendente";
+        const doseStr = r.doseRetida
+          ? "dose retida — em correção"
+          : (pos.valor_minimo !== null
+            ? (pos.valor_minimo === pos.valor_maximo ? pos.valor_minimo : pos.valor_minimo + "–" + pos.valor_maximo) + " " + pos.unidade_dose
+            : "pendente");
         const isSel = SELECTED_RECORD && SELECTED_RECORD.id === r.id;
         return '<tr data-rec-id="' + escapeHTML(r.id) + '" class="cat-row cursor-pointer transition ' + (isSel ? 'bg-teal-50/80' : 'hover:bg-slate-50') + '">' +
           '<td class="py-2.5 px-3"><div class="font-bold text-slate-900">' + escapeHTML(r.medicamento.principio_ativo) + '</div><div class="text-[11px] text-slate-500">' + escapeHTML(concStr) + '</div></td>' +
@@ -1952,9 +1978,11 @@
       document.getElementById('inspForma').textContent = r.medicamento.forma + " • Saída: " + r.administracao.unidade_saida + (r.administracao.fator_gotas_por_ml ? " (" + r.administracao.fator_gotas_por_ml + " gotas/mL)" : "");
 
       const pos = r.posologia;
-      document.getElementById('inspPosologia').textContent = pos.valor_minimo !== null
-        ? (pos.valor_minimo === pos.valor_maximo ? pos.valor_minimo : pos.valor_minimo + " a " + pos.valor_maximo) + " " + pos.unidade_dose
-        : "null (" + pos.tipo_dose + ")";
+      document.getElementById('inspPosologia').textContent = r.doseRetida
+        ? 'dose retida — base temporal em correção (não usar)'
+        : (pos.valor_minimo !== null
+          ? (pos.valor_minimo === pos.valor_maximo ? pos.valor_minimo : pos.valor_minimo + " a " + pos.valor_maximo) + " " + pos.unidade_dose
+          : "null (" + pos.tipo_dose + ")");
       document.getElementById('inspIntervalo').textContent = "Intervalo: " + (pos.intervalo_horas ? pos.intervalo_horas + "h" : "null") + " • Duração: " + (pos.duracao_dias ? pos.duracao_dias + " dias" : "null");
 
       const mt = pos.dose_maxima_por_tomada;
