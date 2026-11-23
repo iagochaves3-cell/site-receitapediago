@@ -1852,14 +1852,19 @@
       // aviso no resultado. O aviso de ausencia de revisao clinica independente
       // continua em todo calculo.
       const result = checkTechnicalLocksJS(rec);
-      const tecnicos = result.blocks.filter(function (b) {
-        // [TETO PENDENTE] e informativo: sem maximo na fonte, calcula sem teto.
-        return b.indexOf('[TETO PENDENTE]') !== 0;
-      });
+      // Bloqueios INFORMATIVOS (nao impedem calcular a dose):
+      //  - [TETO PENDENTE]: sem maximo na fonte, calcula sem teto (nao inventar teto)
+      //  - [DURACAO]: por quantos dias e outra informacao; a dose por tomada vale
+      //    do mesmo jeito. Sem duracao na fonte, nao inventar duracao.
+      const informativos = ['[TETO PENDENTE]', '[DURAÇÃO]'];
+      const eInformativo = function (b) {
+        return informativos.some(function (p) { return b.indexOf(p) === 0; });
+      };
+      const tecnicos = result.blocks.filter(function (b) { return !eInformativo(b); });
       return {
         ok: tecnicos.length === 0,
         blocks: tecnicos,
-        avisos: result.blocks.filter(function (b) { return b.indexOf('[TETO PENDENTE]') === 0; }),
+        avisos: result.blocks.filter(eInformativo),
       };
     }
 
@@ -1949,7 +1954,11 @@
       const vol = d.conversao ? ' <span class="font-normal">= ' + fmt(d.conversao.min) +
         (d.conversao.min === d.conversao.max ? '' : ' a ' + fmt(d.conversao.max)) +
         ' ' + d.conversao.unidade + '</span>' : '';
-      const avisos = (res.avisos || []).map(a => 'Sem teto de dose documentado na fonte: o calculo NAO aplica limite maximo.').filter((v, i, arr) => arr.indexOf(v) === i);
+      const avisos = (res.avisos || []).map(function (a) {
+        if (a.indexOf('[TETO PENDENTE]') === 0) return 'Sem teto de dose documentado na fonte: o calculo NAO aplica limite maximo.';
+        if (a.indexOf('[DURAÇÃO]') === 0) return 'Sem duracao do tratamento documentada na fonte: informada apenas a dose por tomada.';
+        return a;
+      }).filter((v, i, arr) => arr.indexOf(v) === i);
 
       card.innerHTML =
         '<div class="p-4 rounded-xl bg-teal-50 border-2 border-teal-400 text-teal-950 space-y-2">' +
