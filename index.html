@@ -1846,22 +1846,128 @@
     }
 
     function checkImporterLocksJS(rec) {
+      // DESTRAVE CONDICIONAL (23/11/2026, autorizado pelo Iago): a calculadora
+      // passa a funcionar nas fichas que passam nas travas TECNICAS. O teto
+      // ausente nao bloqueia (o prompt mestre manda nao inventar teto); vira
+      // aviso no resultado. O aviso de ausencia de revisao clinica independente
+      // continua em todo calculo.
       const result = checkTechnicalLocksJS(rec);
-      return {ok: false, blocks: ['[VALIDAÇÃO CLÍNICA NÃO COMPROVADA] Catálogo histórico em quarentena. Rótulos “liberado”/“aprovada” do arquivo não habilitam cálculo ou prescrição. Revisão independente e integração versionada são obrigatórias.', ...result.blocks]};
+      const tecnicos = result.blocks.filter(function (b) {
+        // [TETO PENDENTE] e informativo: sem maximo na fonte, calcula sem teto.
+        return b.indexOf('[TETO PENDENTE]') !== 0;
+      });
+      return {
+        ok: tecnicos.length === 0,
+        blocks: tecnicos,
+        avisos: result.blocks.filter(function (b) { return b.indexOf('[TETO PENDENTE]') === 0; }),
+      };
+    }
+
+    // Calcula a dose para um peso. Regras do prompt mestre do acervo:
+    //  - por_peso_por_tomada: valor x peso
+    //  - por_peso_por_dia:    (valor x peso) / tomadas  (usa o minimo de tomadas)
+    //  - dose_fixa / faixa_por_idade: valor absoluto, sem multiplicar por peso
+    //  - sem teto na fonte: nao inventa teto
+    function calcularDose(rec, pesoKg) {
+      const p = rec.posologia;
+      const ap = rec.medicamento.apresentacao;
+      const tomadas = Math.max(1, Math.round(24 / (p.intervalo_horas || 24)));
+      let min = p.valor_minimo, max = p.valor_maximo;
+      if (p.tipo_dose === 'por_peso_por_tomada') { min = min * pesoKg; max = max * pesoKg; }
+      else if (p.tipo_dose === 'por_peso_por_dia') {
+        const t = Math.min(tomadas, 3);
+        min = (min * pesoKg) / t; max = (max * pesoKg) / t;
+      }
+      // Teto SO quando a fonte declara. ATENCAO: o teto pode estar em mg/kg
+      // (por peso) e nao em mg absoluto — precisa multiplicar pelo peso.
+      const capT = p.dose_maxima_por_tomada, capD = p.dose_maxima_por_dia;
+      const absoluto = (cap) => {
+        if (cap.valor === null || !isFinite(cap.valor)) return null;
+        const porKg = String(cap.unidade || '').indexOf('/kg') !== -1;
+        return porKg ? cap.valor * pesoKg : cap.valor;
+      };
+      let tetoTocado = false;
+      const cT = absoluto(capT);
+      if (cT !== null) { if (min > cT) { min = cT; tetoTocado = true; } if (max > cT) { max = cT; tetoTocado = true; } }
+      const cD = absoluto(capD);
+      if (cD !== null) { const dmax = cD / Math.min(tomadas, 3); if (max > dmax) { max = dmax; tetoTocado = true; } }
+      const unidade = (p.unidade_dose || '').split('/')[0];
+      const valorKg = (p.tipo_dose === 'por_peso_por_tomada' || p.tipo_dose === 'por_peso_por_dia');
+      // conversao para a unidade de saida: mL -> gota usa o fator do proprio registro
+      const conc = ap.concentracao_valor && ap.base_valor ? ap.concentracao_valor / ap.base_valor : null;
+      const saida = rec.administracao.unidade_saida;
+      let conv = null;
+      if (conc) {
+        const mLmin = min / conc, mLmax = max / conc;
+        if (saida === 'mL' || ap.base_unidade === 'mL') {
+          const f = (saida === 'gota' && rec.administracao.fator_gotas_por_ml)
+            ? rec.administracao.fator_gotas_por_ml : 1;
+          conv = {min: mLmin * f, max: mLmax * f, unidade: f === 1 ? 'mL' : 'gota'};
+        }
+      }
+      return {min: min, max: max, unidade: unidade, valorKg: valorKg, tomadas: tomadas,
+              tetoTocado: tetoTocado, semTeto: capT.valor === null && capD.valor === null,
+              concentracao: conc, conversao: conv, unidadeSaida: saida};
     }
 
     function evaluateCalculation() {
-      const rec = ALL_RECORDS.find(r => r.id === document.getElementById('calcSchemeSelect').value);
+      const sel = document.getElementById('calcSchemeSelect');
+      const rec = ALL_RECORDS.find(r => r.id === sel.value);
       const card = document.getElementById('calcAuditCard');
+      const pesoEl = document.getElementById('calcWeightInput') || document.getElementById('calcPeso');
+      const peso = pesoEl ? parseFloat(String(pesoEl.value).replace(',', '.')) : NaN;
       document.getElementById('calcAddToRxBtn').disabled = true;
-      const blocks = rec ? checkImporterLocksJS(rec).blocks : ['Nenhum esquema habilitado. Marque “Mostrar registros bloqueados” para inspecionar motivos; isso nunca habilita cálculo.'];
-      card.innerHTML = '<div class="p-4 rounded-xl bg-rose-50 border-2 border-rose-400 text-rose-950 space-y-2"><h3 class="font-bold">Cálculo e prescrição desabilitados</h3><p class="text-xs">Nenhuma dose é calculada a partir desta base sem validação independente. Peso e idade preenchidos não removem esta trava.</p><ul class="text-xs list-disc list-inside space-y-1">' + blocks.map(b => '<li>' + escapeHTML(b) + '</li>').join('') + '</ul></div>';
-      return {blocked: true, rec: rec || null};
+
+      if (!rec) {
+        card.innerHTML = '<div class="p-4 rounded-xl bg-slate-50 border border-slate-300 text-slate-700"><p class="text-xs">Escolha um esquema para ver o cálculo.</p></div>';
+        return {blocked: true, rec: null};
+      }
+
+      const res = checkImporterLocksJS(rec);
+      if (!res.ok) {
+        card.innerHTML = '<div class="p-4 rounded-xl bg-rose-50 border-2 border-rose-400 text-rose-950 space-y-2"><h3 class="font-bold">Esquema bloqueado</h3><p class="text-xs">Esta ficha nao cumpre os requisitos tecnicos para calculo.</p><ul class="text-xs list-disc list-inside space-y-1">' + res.blocks.map(b => '<li>' + escapeHTML(b) + '</li>').join('') + '</ul></div>';
+        return {blocked: true, rec: rec};
+      }
+
+      // precisa de peso quando a dose e por kg
+      const dependePeso = rec.posologia.tipo_dose === 'por_peso_por_tomada' || rec.posologia.tipo_dose === 'por_peso_por_dia';
+      if (dependePeso && (!isFinite(peso) || peso <= 0)) {
+        card.innerHTML = '<div class="p-4 rounded-xl bg-amber-50 border-2 border-amber-400 text-amber-950"><h3 class="font-bold">Informe o peso</h3><p class="text-xs">A dose desta ficha e por kg. Sem peso nao ha calculo — e o peso nunca e presumido pela idade.</p></div>';
+        return {blocked: true, rec: rec, precisaPeso: true};
+      }
+
+      // limite populacional
+      const pop = rec.populacao;
+      let avisoPop = '';
+      if (isFinite(peso) && ((pop.peso_min_kg !== null && peso < pop.peso_min_kg) || (pop.peso_max_kg !== null && peso > pop.peso_max_kg))) {
+        avisoPop = 'Peso fora da faixa documentada na fonte (' + (pop.peso_min_kg ?? '?') + ' a ' + (pop.peso_max_kg ?? '?') + ' kg).';
+      }
+
+      const d = calcularDose(rec, isFinite(peso) ? peso : 0);
+      const fmt = n => Number.isInteger(n) ? String(n) : n.toFixed(3).replace(/0+$/, '').replace(/\.$/, '');
+      const faixa = d.min === d.max ? fmt(d.min) : fmt(d.min) + ' a ' + fmt(d.max);
+      const vol = d.conversao ? ' <span class="font-normal">= ' + fmt(d.conversao.min) +
+        (d.conversao.min === d.conversao.max ? '' : ' a ' + fmt(d.conversao.max)) +
+        ' ' + d.conversao.unidade + '</span>' : '';
+      const avisos = (res.avisos || []).map(a => 'Sem teto de dose documentado na fonte: o calculo NAO aplica limite maximo.').filter((v, i, arr) => arr.indexOf(v) === i);
+
+      card.innerHTML =
+        '<div class="p-4 rounded-xl bg-teal-50 border-2 border-teal-400 text-teal-950 space-y-2">' +
+        '<h3 class="font-bold">Dose calculada</h3>' +
+        '<p class="text-2xl font-black">' + escapeHTML(faixa) + ' ' + escapeHTML(d.unidade) + vol + '</p>' +
+        '<p class="text-xs">' + (d.valorKg ? 'Peso considerado: ' + fmt(peso) + ' kg' : 'Dose fixa: nao depende do peso') +
+        (d.tomadas > 1 ? ' · ' + d.tomadas + ' tomadas/dia' : '') + '</p>' +
+        '<div class="rounded-lg bg-amber-100 border border-amber-400 p-2 text-[11px] text-amber-950"><b>Revisao clinica independente nao comprovada.</b> Resultado aritmetico para conferencia — nao substitui julgamento clinico nem a bula.</div>' +
+        (avisos.length ? '<ul class="text-[11px] list-disc list-inside text-amber-900">' + avisos.map(a => '<li>' + escapeHTML(a) + '</li>').join('') + '</ul>' : '') +
+        (avisoPop ? '<p class="text-[11px] text-rose-800 font-semibold">' + escapeHTML(avisoPop) + '</p>' : '') +
+        '</div>';
+      document.getElementById('calcAddToRxBtn').disabled = false;
+      return {blocked: false, rec: rec, dose: d};
     }
 
     function renderPrescriptionText() {
       ACTIVE_RX_ITEMS = [];
-      document.getElementById('rxOutputTextarea').value = 'EM REVISÃO — NÃO É UMA PRESCRIÇÃO.\n\nO catálogo foi preservado para auditoria, mas nenhum esquema possui validação clínica independente comprovada nesta entrega. Cálculo, inclusão de medicamentos e emissão de receituário permanecem bloqueados.\n\nO editor permite preparar e exportar rascunhos. Validade estrutural não significa aprovação clínica.';
+      document.getElementById('rxOutputTextarea').value = 'RASCUNHO — NÃO É UMA PRESCRIÇÃO.\n\nDose calculada para conferência. Nenhum esquema desta base possui revisão clínica independente comprovada: confira na fonte antes de qualquer uso.\n\nO peso informado não é presumido pela idade. Sem teto documentado, nenhum limite máximo é aplicado.';
       document.getElementById('copyRxTextBtn').disabled = true;
       document.getElementById('downloadRxTxtBtn').disabled = true;
     }
