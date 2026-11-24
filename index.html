@@ -1828,6 +1828,11 @@
       const expectedSuffix = {por_peso_por_tomada:'/kg/dose',por_peso_por_dia:'/kg/dia',dose_fixa:'/dose',faixa_por_idade:'/dose'}[p.tipo_dose];
       if (expectedSuffix && (!p.unidade_dose.endsWith(expectedSuffix) || (['dose_fixa','faixa_por_idade'].includes(p.tipo_dose) && p.unidade_dose.includes('/kg/')))) blocks.push('[BASE TEMPORAL] Unidade da dose incompatível com o tipo de cálculo.');
       if (p.unidade_dose !== 'pendente' && a.concentracao_unidade && p.unidade_dose.split('/')[0] !== a.concentracao_unidade) blocks.push('[UNIDADES] Dose e concentração não estão na mesma unidade explícita.');
+      // 24/11/2026 — "unidade" não é grandeza física: o importador a usou no lugar de gota, jato, mL,
+      // sachê, supositório e frasco-ampola, com concentração-curinga "1 unidade/1 mL". O cálculo exibia
+      // gotas e jatos como mL (ex.: ipratrópio "20 a 25 gotas" virava "20 a 25 mL").
+      if (a.concentracao_unidade === 'unidade' || String(p.unidade_dose).split('/')[0] === 'unidade') blocks.push('[UNIDADE GENÉRICA] Dose registrada em "unidade", sem equivalência física declarada (gota, jato, mL, sachê, supositório, frasco-ampola); conversão desabilitada. Usar o texto da fonte.');
+      if (p.tipo_dose === 'por_peso_por_dia' && positive(p.intervalo_horas) && p.intervalo_horas < 24 && 24 % p.intervalo_horas !== 0) blocks.push('[INTERVALO] O intervalo declarado não divide 24 h; a dose diária não se converte em tomadas inteiras.');
       const compatibleOutput = adm.unidade_saida === a.base_unidade || (adm.unidade_saida === 'gota' && a.base_unidade === 'mL' && positive(adm.fator_gotas_por_ml));
       if (!compatibleOutput) blocks.push('[SAÍDA] Conversão para unidade de saída não demonstrada; ampola não equivale a mL.');
       for (const key of ['dose_maxima_por_tomada','dose_maxima_por_dia']) {
@@ -1835,13 +1840,16 @@
         if (cap.valor !== null && (!positive(cap.valor) || cap.unidade.replace('/kg','') !== a.concentracao_unidade)) blocks.push('[TETO] ' + key + ': valor ou unidade incompatível; não comparar massas sem conversão.');
         if (cap.valor === null) blocks.push('[TETO PENDENTE] ' + key + ' não documentado; não inventar limite.');
       }
+      // 24/11/2026 — "sem teto" só vale quando a FONTE não declara máximo. Se o trecho da fonte traz dose
+      // máxima numérica e a ficha não tem nenhum teto estruturado, calcular sem teto seria ignorar a fonte.
+      if (p.dose_maxima_por_tomada.valor === null && p.dose_maxima_por_dia.valor === null && /(?:m[aá]x(?:imo|ima)?\.?|dose\s+m[aá]xima|n[aã]o\s+(?:exceder|ultrapassar)|teto|limite)[^.;|\n]{0,60}?\d+(?:[.,]\d+)?(?:\s*(?:a|–|-|até)\s*\d+(?:[.,]\d+)?)?\s*(?:mg|mcg|µg|g|UI|U|mEq|mmol|mL|gotas?)(?![a-zà-ú])/i.test(String(rec.fonte.trecho_original || ''))) blocks.push('[TETO NÃO ESTRUTURADO] A fonte declara dose máxima, mas o teto não está estruturado nesta ficha; cálculo desabilitado até a estruturação (não calcular sem o teto da fonte).');
       for (const [min,max] of [['idade_min_dias','idade_max_dias'],['peso_min_kg','peso_max_kg']]) {
         if (pop[min] !== null && pop[max] !== null && pop[min] > pop[max]) blocks.push('[POPULAÇÃO] Limites invertidos: ' + min + '/' + max + '.');
       }
       if (p.tipo_dose === 'faixa_por_idade' && (pop.idade_min_dias === null || pop.idade_max_dias === null)) blocks.push('[IDADE] Faixa etária sem os dois limites explícitos.');
       if (!adm.arredondamento?.trim()) blocks.push('[ARREDONDAMENTO] Política não documentada.');
       if (p.duracao_dias === null) blocks.push('[DURAÇÃO] Ausente; não preencher automaticamente.');
-      if (/infus[aã]o.{0,25}cont[ií]nua|(?:mcg|mg)\/kg\/min/i.test([rec.indicacao.diagnostico,p.observacao,rec.fonte.trecho_original].join(' '))) blocks.push('[INFUSÃO] O contrato atual não modela uma bomba de infusão contínua; cálculo desabilitado.');
+      if (/infus[aã]o.{0,25}cont[ií]nua|(?:mcg|mg|ng|UI|U|mEq|mL)\/kg\/(?:min|hora|h\b)|\bBIC\b|bomba\s+de\s+infus/i.test([rec.indicacao.diagnostico,p.observacao,rec.fonte.trecho_original].join(' '))) blocks.push('[INFUSÃO] O contrato atual não modela uma bomba de infusão contínua; cálculo desabilitado.');
       return {ok: blocks.length === 0, blocks};
     }
 
@@ -1870,7 +1878,7 @@
 
     // Calcula a dose para um peso. Regras do prompt mestre do acervo:
     //  - por_peso_por_tomada: valor x peso
-    //  - por_peso_por_dia:    (valor x peso) / tomadas  (usa o minimo de tomadas)
+    //  - por_peso_por_dia:    (valor x peso) / tomadas  (tomadas = 24 / intervalo declarado)
     //  - dose_fixa / faixa_por_idade: valor absoluto, sem multiplicar por peso
     //  - sem teto na fonte: nao inventa teto
     function calcularDose(rec, pesoKg) {
@@ -1880,8 +1888,9 @@
       let min = p.valor_minimo, max = p.valor_maximo;
       if (p.tipo_dose === 'por_peso_por_tomada') { min = min * pesoKg; max = max * pesoKg; }
       else if (p.tipo_dose === 'por_peso_por_dia') {
-        const t = Math.min(tomadas, 3);
-        min = (min * pesoKg) / t; max = (max * pesoKg) / t;
+        // 24/11/2026 — dividir pelo número REAL de tomadas do intervalo declarado. O limite de 3
+        // tomadas (Math.min) superestimava a dose por tomada em 33% nos esquemas de 6/6 h.
+        min = (min * pesoKg) / tomadas; max = (max * pesoKg) / tomadas;
       }
       // Teto SO quando a fonte declara. ATENCAO: o teto pode estar em mg/kg
       // (por peso) e nao em mg absoluto — precisa multiplicar pelo peso.
@@ -1895,7 +1904,7 @@
       const cT = absoluto(capT);
       if (cT !== null) { if (min > cT) { min = cT; tetoTocado = true; } if (max > cT) { max = cT; tetoTocado = true; } }
       const cD = absoluto(capD);
-      if (cD !== null) { const dmax = cD / Math.min(tomadas, 3); if (max > dmax) { max = dmax; tetoTocado = true; } }
+      if (cD !== null) { const dmax = cD / tomadas; if (min > dmax) { min = dmax; tetoTocado = true; } if (max > dmax) { max = dmax; tetoTocado = true; } }
       const unidade = (p.unidade_dose || '').split('/')[0];
       const valorKg = (p.tipo_dose === 'por_peso_por_tomada' || p.tipo_dose === 'por_peso_por_dia');
       // conversao para a unidade de saida: mL -> gota usa o fator do proprio registro
@@ -1923,6 +1932,24 @@
       const peso = pesoEl ? parseFloat(String(pesoEl.value).replace(',', '.')) : NaN;
       document.getElementById('calcAddToRxBtn').disabled = true;
 
+      // 24/11/2026 (prompt mestre) — peso fora de 0 a 250 kg é rejeitado com erro visível; idade
+      // informada fora da faixa documentada bloqueia o esquema com motivo explícito.
+      const pesoTxt = pesoEl ? String(pesoEl.value).trim() : '';
+      const pesoInvalido = pesoTxt !== '' && (!isFinite(peso) || peso <= 0 || peso > 250);
+      if (pesoEl) pesoEl.setAttribute('aria-invalid', pesoInvalido ? 'true' : 'false');
+      const idadeEl = document.getElementById('calcAgeInput');
+      const idadeUnEl = document.getElementById('calcAgeUnitSelect');
+      const idadeTxt = idadeEl ? String(idadeEl.value).trim() : '';
+      const idadeNum = idadeTxt === '' ? NaN : parseFloat(idadeTxt.replace(',', '.'));
+      const idadeInvalida = idadeTxt !== '' && (!isFinite(idadeNum) || idadeNum < 0);
+      if (idadeEl) idadeEl.setAttribute('aria-invalid', idadeInvalida ? 'true' : 'false');
+      const idadeDias = (idadeTxt === '' || idadeInvalida) ? null : idadeNum * ({anos: 365, meses: 30, dias: 1}[idadeUnEl ? idadeUnEl.value : 'anos'] || 365);
+      const fmtIdade = d => d >= 365 ? String(Math.round(d / 365 * 10) / 10).replace('.', ',') + ' ano(s)' : (d >= 30 ? Math.round(d / 30) + ' mês(es)' : Math.round(d) + ' dia(s)');
+      if (pesoInvalido || idadeInvalida) {
+        card.innerHTML = '<div role="alert" class="p-4 rounded-xl bg-rose-50 border-2 border-rose-400 text-rose-950"><h3 class="font-bold">' + (pesoInvalido ? 'Peso inválido' : 'Idade inválida') + '</h3><p class="text-xs">' + (pesoInvalido ? 'Informe o peso real aferido, maior que 0 e até 250 kg.' : 'Informe a idade real (número maior ou igual a 0) ou deixe o campo vazio.') + ' Nenhum cálculo foi feito.</p></div>';
+        return {blocked: true, rec: rec || null, pesoInvalido: pesoInvalido, idadeInvalida: idadeInvalida};
+      }
+
       if (!rec) {
         card.innerHTML = '<div class="p-4 rounded-xl bg-slate-50 border border-slate-300 text-slate-700"><p class="text-xs">Escolha um esquema para ver o cálculo.</p></div>';
         return {blocked: true, rec: null};
@@ -1930,14 +1957,23 @@
 
       const res = checkImporterLocksJS(rec);
       if (!res.ok) {
-        card.innerHTML = '<div class="p-4 rounded-xl bg-rose-50 border-2 border-rose-400 text-rose-950 space-y-2"><h3 class="font-bold">Esquema bloqueado</h3><p class="text-xs">Esta ficha nao cumpre os requisitos tecnicos para calculo.</p><ul class="text-xs list-disc list-inside space-y-1">' + res.blocks.map(b => '<li>' + escapeHTML(b) + '</li>').join('') + '</ul></div>';
+        card.innerHTML = '<div role="alert" class="p-4 rounded-xl bg-rose-50 border-2 border-rose-400 text-rose-950 space-y-2"><h3 class="font-bold">Esquema bloqueado</h3><p class="text-xs">Esta ficha nao cumpre os requisitos tecnicos para calculo.</p><ul class="text-xs list-disc list-inside space-y-1">' + res.blocks.map(b => '<li>' + escapeHTML(b) + '</li>').join('') + '</ul></div>';
         return {blocked: true, rec: rec};
+      }
+
+      const popIdade = rec.populacao;
+      const foraDaIdade = idadeDias === null ? '' :
+        (popIdade.idade_min_dias !== null && idadeDias < popIdade.idade_min_dias) ? 'Idade informada abaixo da mínima documentada para este esquema (mínimo: ' + fmtIdade(popIdade.idade_min_dias) + ').' :
+        (popIdade.idade_max_dias !== null && idadeDias > popIdade.idade_max_dias) ? 'Idade informada acima da máxima documentada para este esquema (máximo: ' + fmtIdade(popIdade.idade_max_dias) + ').' : '';
+      if (foraDaIdade) {
+        card.innerHTML = '<div role="alert" class="p-4 rounded-xl bg-rose-50 border-2 border-rose-400 text-rose-950 space-y-2"><h3 class="font-bold">Esquema bloqueado pela idade</h3><p class="text-xs">' + escapeHTML(foraDaIdade) + ' O esquema não se aplica a esta idade; nenhum cálculo foi feito.</p></div>';
+        return {blocked: true, rec: rec, foraDaIdade: true};
       }
 
       // precisa de peso quando a dose e por kg
       const dependePeso = rec.posologia.tipo_dose === 'por_peso_por_tomada' || rec.posologia.tipo_dose === 'por_peso_por_dia';
       if (dependePeso && (!isFinite(peso) || peso <= 0)) {
-        card.innerHTML = '<div class="p-4 rounded-xl bg-amber-50 border-2 border-amber-400 text-amber-950"><h3 class="font-bold">Informe o peso</h3><p class="text-xs">A dose desta ficha e por kg. Sem peso nao ha calculo — e o peso nunca e presumido pela idade.</p></div>';
+        card.innerHTML = '<div role="alert" class="p-4 rounded-xl bg-amber-50 border-2 border-amber-400 text-amber-950"><h3 class="font-bold">Informe o peso</h3><p class="text-xs">A dose desta ficha e por kg. Sem peso nao ha calculo — e o peso nunca e presumido pela idade.</p></div>';
         return {blocked: true, rec: rec, precisaPeso: true};
       }
 
@@ -1955,10 +1991,15 @@
         (d.conversao.min === d.conversao.max ? '' : ' a ' + fmt(d.conversao.max)) +
         ' ' + d.conversao.unidade + '</span>' : '';
       const avisos = (res.avisos || []).map(function (a) {
-        if (a.indexOf('[TETO PENDENTE]') === 0) return 'Sem teto de dose documentado na fonte: o calculo NAO aplica limite maximo.';
+        if (a.indexOf('[TETO PENDENTE]') === 0) {
+          const semTetoDose = rec.posologia.dose_maxima_por_tomada.valor === null, semTetoDia = rec.posologia.dose_maxima_por_dia.valor === null;
+          if (semTetoDose && semTetoDia) return 'Sem teto estruturado e sem dose máxima numérica no trecho da fonte: o cálculo NÃO aplica limite máximo.';
+          return semTetoDose ? 'Teto por dose não estruturado nesta ficha: aplicado apenas o teto diário.' : 'Teto diário não estruturado nesta ficha: aplicado apenas o teto por dose.';
+        }
         if (a.indexOf('[DURAÇÃO]') === 0) return 'Sem duracao do tratamento documentada na fonte: informada apenas a dose por tomada.';
         return a;
       }).filter((v, i, arr) => arr.indexOf(v) === i);
+      if (idadeDias === null && rec.posologia.tipo_dose === 'faixa_por_idade') avisos.push('Esquema por faixa etária (' + fmtIdade(popIdade.idade_min_dias) + ' a ' + fmtIdade(popIdade.idade_max_dias) + '): idade não informada — confirme a faixa antes de usar.');
 
       card.innerHTML =
         '<div class="p-4 rounded-xl bg-teal-50 border-2 border-teal-400 text-teal-950 space-y-2">' +
