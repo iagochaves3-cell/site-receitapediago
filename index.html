@@ -1850,6 +1850,30 @@
       }
     }
 
+    function nonOralSolidPresentationHold(rec) {
+      switch (rec.id) {
+        case "mon-11-2-acido-tranexamico-cirurgias-com-risco-de-grande-sangramento-iv":
+        case "mon-27-1-amiodarona-cloridrato-pcr-fv-tv-sem-pulso-refrataria-iv-io":
+        case "mon-58-1-biperideno-cloridrato-lactato-reacao-distonica-aguda-crise-ocul":
+        case "mon-68-1-budesonida-crupe-viral-laringite-estridulosa-emergencia-nebuliz":
+        case "mon-134-3-desmopressina-acetato-ddavp-hemostasia-na-doenca-de-von-willeb":
+        case "mon-140-1-diazepam-estado-de-mal-epileptico-via-intravenosa-intraossea-i":
+        case "mon-140-2-diazepam-convulsao-aguda-sem-acesso-venoso-via-retal-retal":
+        case "mon-156-2-enalapril-maleato-enalaprilato-emergencia-hipertensiva-enalapr":
+        case "mon-203-1-hidralazina-cloridrato-emergencia-hipertensiva-na-gnda-urgenci":
+        case "mon-259-1-lorazepam-estado-de-mal-epileptico-primeira-linha-iv-io":
+        case "mon-269-1-metilprednisolona-succinato-sodico-acetato-pulsoterapia-imunos":
+        case "mon-269-2-metilprednisolona-succinato-sodico-acetato-crise-asmatica-grav":
+        case "mon-281-2-moxifloxacino-cloridrato-conjuntivite-ulcera-de-cornea-oftalmi":
+        case "mon-323-1-piridoxina-vitamina-b6-epilepsia-dependente-de-piridoxina-test":
+        case "mon-384-1-tacrolimo-dermatite-atopica-moderada-a-grave-pomada-0-03-topic":
+        case "mon-392-1-tiamina-vitamina-b1-beriberi-grave-encefalopatia-de-wernicke-p":
+        case "mon-409-1-verapamil-cloridrato-taquicardia-supraventricular-em-criancas-":
+          return '[APRESENTAÇÃO E VIA] Cálculo suspenso: esta ficha histórica combina comprimido ou cápsula com via não oral e conversão em mL. Não usar a ficha para dose, volume ou prescrição. Protocolo e apresentação da via indicada devem ser verificados separadamente.';
+        default: return null;
+      }
+    }
+
     function checkTechnicalLocksJS(rec) {
       const schemaErrors = validateSchemaJS(rec);
       if (schemaErrors.length) return {ok: false, blocks: schemaErrors.map(e => '[ESTRUTURA] ' + e)};
@@ -1865,6 +1889,8 @@
       if (clonidineHold) blocks.push(clonidineHold);
       const clopidogrelHold = clopidogrelCalculationHold(rec);
       if (clopidogrelHold) blocks.push(clopidogrelHold);
+      const nonOralSolidHold = nonOralSolidPresentationHold(rec);
+      if (nonOralSolidHold) blocks.push(nonOralSolidHold);
       const positive = n => typeof n === 'number' && Number.isFinite(n) && n > 0;
       if (rec.status !== 'liberado') blocks.push('[STATUS] Status declarado não liberado.');
       if (['matematica','farmaceutica','clinica','checagem_reversa'].some(k => rev[k] !== 'aprovada') || !rev.responsavel?.trim() || !rev.data) blocks.push('[REVISÃO] Campos de revisão incompletos; preencher não comprova aprovação.');
@@ -2200,7 +2226,8 @@
       const badge = document.getElementById('inspStatusBadge');
       const clonidineHold = clonidineCalculationHold(r);
       const clopidogrelHold = clopidogrelCalculationHold(r);
-      badge.textContent = ((clonidineHold || clopidogrelHold) ? "Só consulta · registro histórico · não usar para prescrição · status original: " : "Bloqueado · status original: ") + r.status;
+      const nonOralSolidHold = nonOralSolidPresentationHold(r);
+      badge.textContent = ((clonidineHold || clopidogrelHold || nonOralSolidHold) ? "Só consulta · registro histórico · não usar para prescrição · status original: " : "Bloqueado · status original: ") + r.status;
       badge.className = "px-2 py-0.5 text-[11px] font-bold rounded uppercase border " + (
         r.status === "liberado"
           ? "bg-amber-500/20 text-amber-300 border-amber-400/30"
@@ -2219,13 +2246,13 @@
       document.getElementById('inspFonteTrecho').textContent = r.fonte.trecho_original;
 
       const ap = r.medicamento.apresentacao;
-      document.getElementById('inspApres').textContent = clonidineHold ? 'Consultar origem histórica; não usar para calcular volume.' : ap.concentracao_valor !== null
+      document.getElementById('inspApres').textContent = (clonidineHold || nonOralSolidHold) ? 'Consultar origem histórica; não usar para calcular volume.' : ap.concentracao_valor !== null
         ? ap.concentracao_valor + " " + ap.concentracao_unidade + " / " + ap.base_valor + " " + ap.base_unidade
         : "null / pendente";
       document.getElementById('inspForma').textContent = r.medicamento.forma + " • Saída: " + r.administracao.unidade_saida + (r.administracao.fator_gotas_por_ml ? " (" + r.administracao.fator_gotas_por_ml + " gotas/mL)" : "");
 
       const pos = r.posologia;
-      document.getElementById('inspPosologia').textContent = clopidogrelHold ? "Somente histórico. Não usar para prescrição." : DOSE_RETIDA_20261122.indexOf(r.id) !== -1
+      document.getElementById('inspPosologia').textContent = (clopidogrelHold || nonOralSolidHold) ? "Somente histórico. Não usar para prescrição." : DOSE_RETIDA_20261122.indexOf(r.id) !== -1
         ? 'dose retida — base temporal em correção (não usar)'
         : (pos.valor_minimo !== null
           ? (pos.valor_minimo === pos.valor_maximo ? pos.valor_minimo : pos.valor_minimo + " a " + pos.valor_maximo) + " " + pos.unidade_dose
@@ -2247,7 +2274,7 @@
       document.getElementById('inspRevisaoAxes').textContent =
         "Mat: " + rev.matematica + " | Farm: " + rev.farmaceutica + " | Clín: " + rev.clinica + " | Rev: " + rev.checagem_reversa;
       document.getElementById('inspRevisaoResp').textContent = (rev.responsavel || "Sem responsável") + " • Data: " + (rev.data || "null");
-      document.getElementById('inspRevisaoNota').textContent = (clonidineHold || clopidogrelHold) ? (clonidineHold || clopidogrelHold) + (rev.nota ? " Nota histórica: " + rev.nota : "") : rev.nota || "Sem nota adicional.";
+      document.getElementById('inspRevisaoNota').textContent = (clonidineHold || clopidogrelHold || nonOralSolidHold) ? (clonidineHold || clopidogrelHold || nonOralSolidHold) + (rev.nota ? " Nota histórica: " + rev.nota : "") : rev.nota || "Sem nota adicional.";
       document.getElementById('inspRawJson').textContent = JSON.stringify(r, null, 2);
     }
 
@@ -2274,9 +2301,10 @@
         const clindamycinHold = hasConflictingLegacyClindamycinRoute(r);
         const clonidineHold = clonidineCalculationHold(r);
         const clopidogrelHold = clopidogrelCalculationHold(r);
-        const tag = clopidogrelHold ? "[SÓ CONSULTA — indicação e população não confirmadas]" : clonidineOralVolumeAllowed(r) ? "[CONFERIR VOLUME — dose já prescrita]" : clonidineHold ? "[SÓ CONSULTA — apresentação ou concentração não confirmada]" : clindamycinHold ? "[SÓ CONSULTA — apresentação e via conflitantes]" : citrateHold ? "[SÓ CONSULTA — concentração não confirmada]" : legacyClarithromycinHold(r) ? "[SÓ CONSULTA — critérios clínicos]" : "[BLOQUEADO — original: " + r.status.toUpperCase() + "]";
+        const nonOralSolidHold = nonOralSolidPresentationHold(r);
+        const tag = nonOralSolidHold ? "[SÓ CONSULTA — apresentação e via conflitantes]" : clopidogrelHold ? "[SÓ CONSULTA — indicação e população não confirmadas]" : clonidineOralVolumeAllowed(r) ? "[CONFERIR VOLUME — dose já prescrita]" : clonidineHold ? "[SÓ CONSULTA — apresentação ou concentração não confirmada]" : clindamycinHold ? "[SÓ CONSULTA — apresentação e via conflitantes]" : citrateHold ? "[SÓ CONSULTA — concentração não confirmada]" : legacyClarithromycinHold(r) ? "[SÓ CONSULTA — critérios clínicos]" : "[BLOQUEADO — original: " + r.status.toUpperCase() + "]";
         const ap = r.medicamento.apresentacao;
-        const cStr = clonidineOralVolumeAllowed(r) ? "concentração do rótulo" : (citrateHold || clindamycinHold || clonidineHold || clopidogrelHold) ? "ver histórico" : ap.concentracao_valor !== null ? (ap.concentracao_valor + ap.concentracao_unidade + "/" + ap.base_valor + ap.base_unidade) : "s/ conc";
+        const cStr = clonidineOralVolumeAllowed(r) ? "concentração do rótulo" : (citrateHold || clindamycinHold || clonidineHold || clopidogrelHold || nonOralSolidHold) ? "ver histórico" : ap.concentracao_valor !== null ? (ap.concentracao_valor + ap.concentracao_unidade + "/" + ap.base_valor + ap.base_unidade) : "s/ conc";
         return '<option value="' + escapeHTML(r.id) + '">' + escapeHTML(tag) + ' ' + escapeHTML(r.medicamento.principio_ativo) + ' (' + escapeHTML(cStr) + ') — ' + escapeHTML(r.indicacao.diagnostico) + '</option>';
       }).join('');
 
