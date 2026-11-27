@@ -1987,8 +1987,14 @@
           ' mL. Conferência inversa: ' + fmt.format(result.reverse) +
           ' mcg. Valores exibidos com até 9 algarismos significativos; sem ajuste ao dispositivo de medida.';
       }
-      dose.addEventListener('input', update);
-      concentration.addEventListener('input', update);
+      function invalidateConfirmation() {
+        confirmation.checked = false;
+        output.textContent = '';
+      }
+      for (const field of [dose, concentration]) {
+        field.addEventListener('input', invalidateConfirmation);
+        field.addEventListener('change', invalidateConfirmation);
+      }
       confirmation.addEventListener('change', update);
     }
 
@@ -2001,7 +2007,7 @@
       '<label class="block text-sm" for="clonidine-label-mcg-ml">Concentração da solução oral no rótulo (mcg/mL)</label>' +
       '<input id="clonidine-label-mcg-ml" class="block w-full border rounded p-2" type="text" inputmode="decimal" autocomplete="off">' +
       '<label class="block text-xs"><input id="clonidine-oral-label-confirm" type="checkbox"> Conferi a via oral e que a dose prescrita e a concentração estão expressas na mesma base (ambas em cloridrato ou ambas em clonidina base).</label>' +
-      '<p class="text-xs">Volume = dose ÷ concentração. Confira o resultado com a farmácia antes de medir ou administrar.</p>' +
+      '<p class="text-xs">Volume = dose ÷ concentração. Se alterar a dose ou a concentração, confirme novamente. Confira o resultado com a farmácia antes de medir ou administrar.</p>' +
       '<output id="clonidine-volume-result" class="block font-bold" aria-live="polite"></output></section>';
 
     function evaluateCalculation() {
