@@ -1823,6 +1823,10 @@
       return '';
     }
 
+    function hasConflictingLegacyClindamycinRoute(rec) {
+      return rec.id === 'mon-111-1-clindamicina-cloridrato-fosfato-infeccoes-osteoarticulares-ca-';
+    }
+
     function checkTechnicalLocksJS(rec) {
       const schemaErrors = validateSchemaJS(rec);
       if (schemaErrors.length) return {ok: false, blocks: schemaErrors.map(e => '[ESTRUTURA] ' + e)};
@@ -1833,6 +1837,7 @@
       if (isUnverifiedPotassiumCitratePresentation(rec)) blocks.push('[APRESENTAÇÃO] Cálculo suspenso: a fonte histórica não identifica o produto nem confirma a concentração em mEq/mL. Os valores em mg e mEq são conflitantes. Não usar para calcular volume; consulte o rótulo da preparação real.');
       const clarithromycinHold = legacyClarithromycinHold(rec);
       if (clarithromycinHold) blocks.push('[REVISÃO CLÍNICA] Cálculo suspenso: ' + clarithromycinHold);
+      if (hasConflictingLegacyClindamycinRoute(rec)) blocks.push('[APRESENTAÇÃO E VIA] Cálculo suspenso: a ficha histórica identifica Dalacin C como solução oral, mas contém uma regra intravenosa. A bula brasileira de Dalacin C descreve cápsula oral para adultos. Não usar esta ficha para calcular dose ou volume nem substituir automaticamente por uma apresentação injetável.');
       const positive = n => typeof n === 'number' && Number.isFinite(n) && n > 0;
       if (rec.status !== 'liberado') blocks.push('[STATUS] Status declarado não liberado.');
       if (['matematica','farmaceutica','clinica','checagem_reversa'].some(k => rev[k] !== 'aprovada') || !rev.responsavel?.trim() || !rev.data) blocks.push('[REVISÃO] Campos de revisão incompletos; preencher não comprova aprovação.');
@@ -2173,9 +2178,10 @@
 
       sel.innerHTML = pool.map(r => {
         const citrateHold = isUnverifiedPotassiumCitratePresentation(r);
-        const tag = citrateHold ? "[SÓ CONSULTA — concentração não confirmada]" : legacyClarithromycinHold(r) ? "[SÓ CONSULTA — critérios clínicos]" : "[BLOQUEADO — original: " + r.status.toUpperCase() + "]";
+        const clindamycinHold = hasConflictingLegacyClindamycinRoute(r);
+        const tag = clindamycinHold ? "[SÓ CONSULTA — apresentação e via conflitantes]" : citrateHold ? "[SÓ CONSULTA — concentração não confirmada]" : legacyClarithromycinHold(r) ? "[SÓ CONSULTA — critérios clínicos]" : "[BLOQUEADO — original: " + r.status.toUpperCase() + "]";
         const ap = r.medicamento.apresentacao;
-        const cStr = citrateHold ? "ver histórico" : ap.concentracao_valor !== null ? (ap.concentracao_valor + ap.concentracao_unidade + "/" + ap.base_valor + ap.base_unidade) : "s/ conc";
+        const cStr = (citrateHold || clindamycinHold) ? "ver histórico" : ap.concentracao_valor !== null ? (ap.concentracao_valor + ap.concentracao_unidade + "/" + ap.base_valor + ap.base_unidade) : "s/ conc";
         return '<option value="' + escapeHTML(r.id) + '">' + escapeHTML(tag) + ' ' + escapeHTML(r.medicamento.principio_ativo) + ' (' + escapeHTML(cStr) + ') — ' + escapeHTML(r.indicacao.diagnostico) + '</option>';
       }).join('');
 
