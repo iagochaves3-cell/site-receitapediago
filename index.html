@@ -1818,6 +1818,8 @@
       if (schemaErrors.length) return {ok: false, blocks: schemaErrors.map(e => '[ESTRUTURA] ' + e)};
       const blocks = [];
       const {posologia: p, medicamento: {apresentacao: a}, administracao: adm, populacao: pop, revisao: rev} = rec;
+      if (rec.id === 'mon-1-1-acebrofilina-criancas-de-2-a-3-anos-vo') blocks.push('[APRESENTAÇÃO] Cálculo suspenso: a concentração cadastrada diverge do xarope pediátrico de 25 mg/5 mL da rotulagem brasileira. Consulte a ficha e a bula oficial.');
+      if (rec.id === 'mon-1-3-acebrofilina-criancas-de-6-a-12-anos-vo') blocks.push('[UNIDADE] Cálculo suspenso: a unidade genérica cadastrada não comprova a equivalência para mL. Consulte a ficha e a bula oficial.');
       const positive = n => typeof n === 'number' && Number.isFinite(n) && n > 0;
       if (rec.status !== 'liberado') blocks.push('[STATUS] Status declarado não liberado.');
       if (['matematica','farmaceutica','clinica','checagem_reversa'].some(k => rev[k] !== 'aprovada') || !rev.responsavel?.trim() || !rev.data) blocks.push('[REVISÃO] Campos de revisão incompletos; preencher não comprova aprovação.');
@@ -1932,6 +1934,17 @@
       if (!res.ok) {
         card.innerHTML = '<div class="p-4 rounded-xl bg-rose-50 border-2 border-rose-400 text-rose-950 space-y-2"><h3 class="font-bold">Esquema bloqueado</h3><p class="text-xs">Esta ficha nao cumpre os requisitos tecnicos para calculo.</p><ul class="text-xs list-disc list-inside space-y-1">' + res.blocks.map(b => '<li>' + escapeHTML(b) + '</li>').join('') + '</ul></div>';
         return {blocked: true, rec: rec};
+      }
+
+      if (rec.id === 'mon-1-2-acebrofilina-criancas-de-3-a-6-anos-vo') {
+        const ageText = String(document.getElementById('calcAgeInput')?.value ?? '').trim().replace(',', '.');
+        const unit = document.getElementById('calcAgeUnitSelect')?.value;
+        const bounds = {anos:[3,6], meses:[36,72], dias:[1095,2190]}[unit];
+        const age = Number(ageText);
+        if (!/^\d+(?:\.\d+)?$/.test(ageText) || !bounds || !Number.isFinite(age) || age < bounds[0] || age > bounds[1]) {
+          card.innerHTML = '<div role="alert" class="p-4 rounded-xl bg-amber-50 border border-amber-400 text-amber-950"><p>Informe uma idade dentro da faixa de 3 a 6 anos desta ficha de acebrofilina. Sem idade compatível não há cálculo.</p></div>';
+          return {blocked: true, rec: rec};
+        }
       }
 
       // precisa de peso quando a dose e por kg
