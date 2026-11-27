@@ -1817,6 +1817,12 @@
       return rec.id === 'mon-108-1-citrato-de-potassio-nefrolitiase-hipocitraturia-atr-tipo-1-vo';
     }
 
+    function legacyClarithromycinHold(rec) {
+      if (rec.id === 'mon-109-1-claritromicina-infeccoes-respiratorias-oma-faringite-vo') return 'A ficha histórica agrega indicações com tetos e critérios distintos. Não usar o esquema agregado para calcular ou prescrever. A suspensão Klaricid é contraindicada abaixo de 6 meses.';
+      if (rec.id === 'mon-109-2-claritromicina-erradicacao-de-h-pylori-vo') return 'A ficha histórica não valida suscetibilidade nem aplica um teto operacional. A diretriz pediátrica orienta evitar claritromicina se a suscetibilidade não for conhecida. A suspensão Klaricid é contraindicada abaixo de 6 meses.';
+      return '';
+    }
+
     function checkTechnicalLocksJS(rec) {
       const schemaErrors = validateSchemaJS(rec);
       if (schemaErrors.length) return {ok: false, blocks: schemaErrors.map(e => '[ESTRUTURA] ' + e)};
@@ -1825,6 +1831,8 @@
       if (rec.id === 'mon-1-1-acebrofilina-criancas-de-2-a-3-anos-vo') blocks.push('[APRESENTAÇÃO] Cálculo suspenso: a concentração cadastrada diverge do xarope pediátrico de 25 mg/5 mL da rotulagem brasileira. Consulte a ficha e a bula oficial.');
       if (rec.id === 'mon-1-3-acebrofilina-criancas-de-6-a-12-anos-vo') blocks.push('[UNIDADE] Cálculo suspenso: a unidade genérica cadastrada não comprova a equivalência para mL. Consulte a ficha e a bula oficial.');
       if (isUnverifiedPotassiumCitratePresentation(rec)) blocks.push('[APRESENTAÇÃO] Cálculo suspenso: a fonte histórica não identifica o produto nem confirma a concentração em mEq/mL. Os valores em mg e mEq são conflitantes. Não usar para calcular volume; consulte o rótulo da preparação real.');
+      const clarithromycinHold = legacyClarithromycinHold(rec);
+      if (clarithromycinHold) blocks.push('[REVISÃO CLÍNICA] Cálculo suspenso: ' + clarithromycinHold);
       const positive = n => typeof n === 'number' && Number.isFinite(n) && n > 0;
       if (rec.status !== 'liberado') blocks.push('[STATUS] Status declarado não liberado.');
       if (['matematica','farmaceutica','clinica','checagem_reversa'].some(k => rev[k] !== 'aprovada') || !rev.responsavel?.trim() || !rev.data) blocks.push('[REVISÃO] Campos de revisão incompletos; preencher não comprova aprovação.');
@@ -2165,7 +2173,7 @@
 
       sel.innerHTML = pool.map(r => {
         const citrateHold = isUnverifiedPotassiumCitratePresentation(r);
-        const tag = citrateHold ? "[SÓ CONSULTA — concentração não confirmada]" : "[BLOQUEADO — original: " + r.status.toUpperCase() + "]";
+        const tag = citrateHold ? "[SÓ CONSULTA — concentração não confirmada]" : legacyClarithromycinHold(r) ? "[SÓ CONSULTA — critérios clínicos]" : "[BLOQUEADO — original: " + r.status.toUpperCase() + "]";
         const ap = r.medicamento.apresentacao;
         const cStr = citrateHold ? "ver histórico" : ap.concentracao_valor !== null ? (ap.concentracao_valor + ap.concentracao_unidade + "/" + ap.base_valor + ap.base_unidade) : "s/ conc";
         return '<option value="' + escapeHTML(r.id) + '">' + escapeHTML(tag) + ' ' + escapeHTML(r.medicamento.principio_ativo) + ' (' + escapeHTML(cStr) + ') — ' + escapeHTML(r.indicacao.diagnostico) + '</option>';
