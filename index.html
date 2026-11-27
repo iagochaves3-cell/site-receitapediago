@@ -1880,7 +1880,7 @@
       let min = p.valor_minimo, max = p.valor_maximo;
       if (p.tipo_dose === 'por_peso_por_tomada') { min = min * pesoKg; max = max * pesoKg; }
       else if (p.tipo_dose === 'por_peso_por_dia') {
-        const t = Math.min(tomadas, 3);
+        const t = p.intervalo_horas === 6 ? tomadas : Math.min(tomadas, 3);
         min = (min * pesoKg) / t; max = (max * pesoKg) / t;
       }
       // Teto SO quando a fonte declara. ATENCAO: o teto pode estar em mg/kg
@@ -1895,7 +1895,7 @@
       const cT = absoluto(capT);
       if (cT !== null) { if (min > cT) { min = cT; tetoTocado = true; } if (max > cT) { max = cT; tetoTocado = true; } }
       const cD = absoluto(capD);
-      if (cD !== null) { const dmax = cD / Math.min(tomadas, 3); if (max > dmax) { max = dmax; tetoTocado = true; } }
+      if (cD !== null) { const dmax = cD / (p.intervalo_horas === 6 ? tomadas : Math.min(tomadas, 3)); if (p.intervalo_horas === 6 && min > dmax) { min = dmax; tetoTocado = true; } if (max > dmax) { max = dmax; tetoTocado = true; } }
       const unidade = (p.unidade_dose || '').split('/')[0];
       const valorKg = (p.tipo_dose === 'por_peso_por_tomada' || p.tipo_dose === 'por_peso_por_dia');
       // conversao para a unidade de saida: mL -> gota usa o fator do proprio registro
