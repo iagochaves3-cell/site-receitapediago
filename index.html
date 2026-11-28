@@ -1870,6 +1870,29 @@
         case "mon-392-1-tiamina-vitamina-b1-beriberi-grave-encefalopatia-de-wernicke-p":
         case "mon-409-1-verapamil-cloridrato-taquicardia-supraventricular-em-criancas-":
           return '[APRESENTAÇÃO E VIA] Cálculo suspenso: esta ficha histórica combina comprimido ou cápsula com via não oral e conversão em mL. Não usar a ficha para dose, volume ou prescrição. Protocolo e apresentação da via indicada devem ser verificados separadamente.';
+        case "mon-9-1-acido-folinico-folinato-de-calcio-toxoplasmose-congenita-coadjuv":
+        case "mon-9-2-acido-folinico-folinato-de-calcio-resgate-de-metotrexato-iv-vo":
+        case "mon-11-3-acido-tranexamico-menorragia-sangramento-mucoso-vo":
+        case "mon-27-3-amiodarona-cloridrato-manutencao-antiarritmica-cronica-vo":
+        case "mon-46-1-baclofeno-espasticidade-na-paralisia-cerebral-vo":
+        case "mon-58-2-biperideno-cloridrato-lactato-manutencao-prevencao-de-recorrenc":
+        case "mon-74-1-calcitriol-1-25-di-hidroxivitamina-d3-hipoparatireoidismo-raqui":
+        case "mon-74-2-calcitriol-1-25-di-hidroxivitamina-d3-osteodistrofia-renal-na-d":
+        case "mon-181-1-flucitosina-meningite-criptococica-candidiase-invasiva-grave-i":
+        case "mon-203-2-hidralazina-cloridrato-tratamento-oral-de-manutencao-vo":
+        case "mon-235-1-isossorbida-mononitrato-dinitrato-insuficiencia-cardiaca-conge":
+        case "mon-271-1-metoprolol-tartarato-succinato-hipertensao-e-insuficiencia-car":
+        case "mon-281-1-moxifloxacino-cloridrato-tuberculose-multirresistente-criancas":
+        case "mon-323-2-piridoxina-vitamina-b6-epilepsia-dependente-de-piridoxina-manu":
+        case "mon-323-4-piridoxina-vitamina-b6-profilaxia-de-neuropatia-em-tratamento-":
+        case "mon-384-2-tacrolimo-pos-transplante-de-orgaos-manutencao-vo":
+        case "mon-393-1-tiaprida-cloridrato-sindrome-de-tourette-disturbios-de-conduta":
+        case "mon-409-2-verapamil-cloridrato-tratamento-oral-de-manutencao-vo":
+          return '[APRESENTAÇÃO E VIA] Cálculo suspenso: a ficha oral foi cadastrada como comprimido ou cápsula, mas a conversão em mL usa dados da formulação parenteral registrada na mesma ficha. Não usar esta ficha para dose, volume ou prescrição.';
+        case "cat319-anv-012-acido-nalidixico":
+          return '[APRESENTAÇÃO E VIA] Cálculo suspenso: a ficha mistura comprimido com suspensão manipulada. Não presume preparação disponível nem aplica essa concentração ao comprimido. Confirmar preparação oral e concentração com a farmácia, além da indicação e da dose, antes de prescrever.';
+        case "mon-134-1-desmopressina-acetato-ddavp-enurese-noturna-monossintomatica-v":
+          return '[APRESENTAÇÃO E VIA] Cálculo suspenso: a ficha oral foi cadastrada como comprimido, mas a conversão em mL usa dados da formulação nasal registrada na mesma ficha. Não converter entre vias nem usar esta ficha para prescrição.';
         default: return null;
       }
     }
