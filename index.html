@@ -2121,6 +2121,28 @@
 
       const d = calcularDose(rec, isFinite(peso) ? peso : 0);
       const fmt = n => Number.isInteger(n) ? String(n) : n.toFixed(3).replace(/0+$/, '').replace(/\.$/, '');
+      // Não transformar um conflito de faixa/teto em uma nova recomendação de dose.
+      const p = rec.posologia;
+      const absolute = cap => cap.valor === null ? Infinity :
+        cap.valor * (cap.unidade.includes('/kg') ? peso : 1);
+      const capT = absolute(p.dose_maxima_por_tomada);
+      const capD = absolute(p.dose_maxima_por_dia) / d.tomadas;
+      const ceiling = Math.min(capT, capD);
+      const positive = n => Number.isFinite(n) && n > 0;
+      const ordered = (lo, hi) => positive(lo) && positive(hi) && lo <= hi;
+      const withinCap = n => positive(n) &&
+        (n <= ceiling || (positive(ceiling) && n - ceiling <= 8 * Number.EPSILON * Math.max(n, ceiling)));
+      const maxDisplay = Number(fmt(d.max));
+      const v = d.conversao;
+      const factor = v?.unidade === 'gota' ? rec.administracao.fator_gotas_por_ml : 1;
+      const conversionOk = !v || (ordered(v.min, v.max) && positive(d.concentracao) &&
+        positive(factor) && positive(Number(fmt(v.min))) &&
+        withinCap(Number(fmt(v.max)) / factor * d.concentracao));
+      if (!ordered(d.min, d.max) || !positive(Number(fmt(d.min))) || !withinCap(d.max) ||
+          !withinCap(maxDisplay) || !conversionOk) {
+        card.innerHTML = '<div role="alert" class="p-4 rounded-xl bg-rose-50 border-2 border-rose-400 text-rose-950"><h3 class="font-bold">Resultado não exibido</h3><p class="text-xs">O cálculo ou seu arredondamento não respeita a faixa ou o teto documentado. Confira a ficha e a fonte original. Não use este resultado para dose, volume ou prescrição.</p></div>';
+        return {blocked: true, rec: rec};
+      }
       const faixa = d.min === d.max ? fmt(d.min) : fmt(d.min) + ' a ' + fmt(d.max);
       const vol = d.conversao ? ' <span class="font-normal">= ' + fmt(d.conversao.min) +
         (d.conversao.min === d.conversao.max ? '' : ' a ' + fmt(d.conversao.max)) +
