@@ -1852,8 +1852,14 @@
         : null;
     }
 
+    function cholestyramineCalculationHold(rec) {
+      return rec.id === 'mon-125-1-colestiramina-prurido-na-colestase-hipercolesterolemia-vo'
+        ? '[INDICAÇÃO E FRACIONAMENTO] Cálculo suspenso: a ficha histórica reúne duas indicações e o intervalo cadastrado conflita com a divisão da dose diária descrita na fonte. Não usar esta ficha para dose, volume, intervalo ou prescrição.'
+        : null;
+    }
+
     function legacyDoseCalculationHold(rec) {
-      return colchicineCalculationHold(rec) || colecalciferolCalculationHold(rec);
+      return colchicineCalculationHold(rec) || colecalciferolCalculationHold(rec) || cholestyramineCalculationHold(rec);
     }
 
     function clopidogrelCalculationHold(rec) {
@@ -2310,7 +2316,7 @@
       document.getElementById('inspFonteTrecho').textContent = r.fonte.trecho_original;
 
       const ap = r.medicamento.apresentacao;
-      document.getElementById('inspApres').textContent = (clonidineHold || nonOralSolidHold || colecalciferolCalculationHold(r)) ? 'Consultar origem histórica; não usar para calcular volume.' : ap.concentracao_valor !== null
+      document.getElementById('inspApres').textContent = (clonidineHold || nonOralSolidHold || colecalciferolCalculationHold(r) || cholestyramineCalculationHold(r)) ? 'Consultar origem histórica; não usar para calcular volume.' : ap.concentracao_valor !== null
         ? ap.concentracao_valor + " " + ap.concentracao_unidade + " / " + ap.base_valor + " " + ap.base_unidade
         : "null / pendente";
       document.getElementById('inspForma').textContent = r.medicamento.forma + " • Saída: " + r.administracao.unidade_saida + (r.administracao.fator_gotas_por_ml ? " (" + r.administracao.fator_gotas_por_ml + " gotas/mL)" : "");
@@ -2367,7 +2373,7 @@
         const clopidogrelHold = clopidogrelCalculationHold(r);
         const legacyDoseHold = legacyDoseCalculationHold(r);
         const nonOralSolidHold = nonOralSolidPresentationHold(r);
-        const tag = colecalciferolCalculationHold(r) ? "[SÓ CONSULTA — concentração e intervalo conflitantes]" : legacyDoseHold ? "[SÓ CONSULTA — dose diária e idade não reconciliadas]" : nonOralSolidHold ? "[SÓ CONSULTA — apresentação e via conflitantes]" : clopidogrelHold ? "[SÓ CONSULTA — indicação e população não confirmadas]" : clonidineOralVolumeAllowed(r) ? "[CONFERIR VOLUME — dose já prescrita]" : clonidineHold ? "[SÓ CONSULTA — apresentação ou concentração não confirmada]" : clindamycinHold ? "[SÓ CONSULTA — apresentação e via conflitantes]" : citrateHold ? "[SÓ CONSULTA — concentração não confirmada]" : legacyClarithromycinHold(r) ? "[SÓ CONSULTA — critérios clínicos]" : "[BLOQUEADO — original: " + r.status.toUpperCase() + "]";
+        const tag = cholestyramineCalculationHold(r) ? "[SÓ CONSULTA — indicação e fracionamento conflitantes]" : colecalciferolCalculationHold(r) ? "[SÓ CONSULTA — concentração e intervalo conflitantes]" : legacyDoseHold ? "[SÓ CONSULTA — dose diária e idade não reconciliadas]" : nonOralSolidHold ? "[SÓ CONSULTA — apresentação e via conflitantes]" : clopidogrelHold ? "[SÓ CONSULTA — indicação e população não confirmadas]" : clonidineOralVolumeAllowed(r) ? "[CONFERIR VOLUME — dose já prescrita]" : clonidineHold ? "[SÓ CONSULTA — apresentação ou concentração não confirmada]" : clindamycinHold ? "[SÓ CONSULTA — apresentação e via conflitantes]" : citrateHold ? "[SÓ CONSULTA — concentração não confirmada]" : legacyClarithromycinHold(r) ? "[SÓ CONSULTA — critérios clínicos]" : "[BLOQUEADO — original: " + r.status.toUpperCase() + "]";
         const ap = r.medicamento.apresentacao;
         const cStr = clonidineOralVolumeAllowed(r) ? "concentração do rótulo" : (citrateHold || clindamycinHold || clonidineHold || clopidogrelHold || legacyDoseHold || nonOralSolidHold) ? "ver histórico" : ap.concentracao_valor !== null ? (ap.concentracao_valor + ap.concentracao_unidade + "/" + ap.base_valor + ap.base_unidade) : "s/ conc";
         return '<option value="' + escapeHTML(r.id) + '">' + escapeHTML(tag) + ' ' + escapeHTML(r.medicamento.principio_ativo) + ' (' + escapeHTML(cStr) + ') — ' + escapeHTML(r.indicacao.diagnostico) + '</option>';
